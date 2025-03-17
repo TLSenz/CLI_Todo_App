@@ -1,9 +1,9 @@
 
-use std::io::{stdin, BufReader};
+use std::io::{stdin};
 use std::num::ParseIntError;
 use std::fs::File;
 use std::io::{self,BufRead};
-use std::io::ErrorKind::FileTooLarge;
+use std::io::prelude::*;
 
 fn main() {
     let mut todo_list: Vec<Todo> = Vec::new();
@@ -21,7 +21,18 @@ fn main() {
                 }
 
             }
-            5 => break,  // Exit the loop
+            5 => {
+                let result = write_todos_to_file(&mut todo_list);
+                match result {
+                    Ok(_result) => {
+                        println!("Export worked");
+                    }
+                    Err(e)=> {
+                        println!("Error: {}", e);
+                    }
+                }
+            }
+            6 => break,  // Exit the loop
             _ => println!("Invalid option, please try again."),
         }
     }
@@ -37,8 +48,8 @@ fn menu() -> i32{
     println!("1. Hinzufuegen");
     println!("2.Anschauen");
     println!("3.Task Loeschen");
+    println!("4.Import Tasks");
     println!("5.Export Tasks");
-    println!("5.Import Tasks");
 
     let mut user_input:String = String::new();
 
@@ -117,7 +128,7 @@ fn import_todos() -> Vec<Todo>{
     let todos:Vec<Todo> = todo_in_string_format
         .into_iter()
         .map(|line| {
-            let parts: Vec<&str> = line.split(",").collect()
+            let parts: Vec<&str> = line.split(",").collect();
             if parts.len() == 2{
                 Todo{
                     name : parts[0].to_string(),
@@ -136,15 +147,25 @@ fn import_todos() -> Vec<Todo>{
 
     todos
 }
-fn read_todos_from_file() -> Vec<String>{
-    let file = File::open(r"C:\Users\zempsv\Documents\RustTodo.txt");
-    let reader =   io::BufReader::new(file);
-    let mut file_input:Vec<String> = Vec::new();
+    fn read_todos_from_file() -> Result<Vec<String>,io::Error>{
+        let file = File::open(r"C:\Users\zempsv\Documents\RustTodo.txt")?;
+        let reader =   io::BufReader::new(file);
+        let mut file_input:Vec<String> = Vec::new();
 
 
-    for line in reader.lines(){
-        let line = line?;
-        file_input.push(line);
+        for line in reader.lines(){
+            let line = line?;
+            file_input.push(line);
+        }
+        Ok(file_input)
     }
-    file_input
+
+fn write_todos_to_file(todolist: &mut Vec<Todo>) -> std::io::Result<()> {
+    let mut file = File::create("todo.txt")?;
+    for n in todolist.into_iter(){
+        file.write_all(n.name.as_ref())?;
+        file.write_all(n.todo.as_ref())?;
+    }
+    Ok(())
+
 }
