@@ -118,13 +118,10 @@ fn create_todo( todo_list:&mut Vec<Todo>){
 fn import_todos() -> Vec<Todo>{
     let result = read_todos_from_file();
 
-    let todo_in_string_format: Vec<String> =  match result {
-        Ok(todo_in_string_format) => todo_in_string_format,
-        Err(error) => {
-            println!("Error while reading file: {}",error);
-            Vec::new()
-        }
-    };
+    let todo_in_string_format: Vec<String> = result.unwrap_or_else(|error| {
+        println!("Error while reading file: {}", error);
+        Vec::new()
+    });
     let todos:Vec<Todo> = todo_in_string_format
         .into_iter()
         .map(|line| {
